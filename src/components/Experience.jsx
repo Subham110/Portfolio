@@ -113,7 +113,7 @@ const Experience = () => {
   const experiences = [
     {
       type: 'work',
-      date: '2022 - Present',
+      date: '2025 - Present',
       title: 'Senior Full Stack Developer',
       subtitle: 'Tech Company',
       description: 'Leading the development of enterprise-level applications using React, Node.js, and cloud technologies.',
@@ -121,7 +121,7 @@ const Experience = () => {
     },
     {
       type: 'work',
-      date: '2020 - 2022',
+      date: '2024 - 2025',
       title: 'Full Stack Developer',
       subtitle: 'Startup Company',
       description: 'Developed and maintained multiple web applications using modern technologies and best practices.',
@@ -129,7 +129,7 @@ const Experience = () => {
     },
     {
       type: 'education',
-      date: '2016 - 2020',
+      date: '2021 - 2024',
       title: 'Bachelor of Technology',
       subtitle: 'Computer Science',
       description: 'Graduated with honors, focusing on software development and computer science fundamentals.',

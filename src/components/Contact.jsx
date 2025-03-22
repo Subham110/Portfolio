@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaGithub, FaLinkedin, FaTwitter, FaEnvelope, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
+import { FaGithub, FaLinkedin,FaInstagram, FaTwitter, FaEnvelope } from 'react-icons/fa';
+import { api } from '../utils/api';
 
 const ContactSection = styled.section`
   padding: 100px 20px;
@@ -123,51 +124,17 @@ const SubmitButton = styled.button`
   }
 `;
 
-const StatusMessageWrapper = styled(motion.div)`
+const MessageContainer = styled(motion.div)`
   position: fixed;
   top: 20px;
   right: 20px;
-  z-index: 1000;
-`;
-
-const StatusMessage = styled(motion.div)`
   padding: 15px 25px;
   border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  min-width: 300px;
-  
-  ${props => props.type === 'error' && `
-    background: rgba(255, 0, 0, 0.95);
-    color: white;
-  `}
-  
-  ${props => props.type === 'success' && `
-    background: rgba(100, 255, 218, 0.95);
-    color: #0a192f;
-  `}
-  
-  ${props => props.type === 'loading' && `
-    background: rgba(204, 214, 246, 0.95);
-    color: #0a192f;
-  `}
-`;
-
-const ProgressBar = styled(motion.div)`
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 3px;
-  background: ${props => props.type === 'success' ? '#0a192f' : 'white'};
-  opacity: 0.5;
-`;
-
-const StatusIcon = styled.div`
-  font-size: 20px;
-  display: flex;
-  align-items: center;
+  background: ${props => props.type === 'success' ? 'rgba(100, 255, 218, 0.1)' : 'rgba(255, 107, 107, 0.1)'};
+  border: 1px solid ${props => props.type === 'success' ? '#64ffda' : '#ff6b6b'};
+  color: ${props => props.type === 'success' ? '#64ffda' : '#ff6b6b'};
+  z-index: 1000;
+  backdrop-filter: blur(5px);
 `;
 
 const Contact = () => {
@@ -177,18 +144,15 @@ const Contact = () => {
     subject: '',
     message: ''
   });
-  const [status, setStatus] = useState({
-    type: '',
-    message: ''
-  });
-  const [isVisible, setIsVisible] = useState(false);
+  const [status, setStatus] = useState({ type: '', message: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Clear status message after 5 seconds
   useEffect(() => {
     let timeoutId;
     if (status.message) {
-      setIsVisible(true);
       timeoutId = setTimeout(() => {
-        setIsVisible(false);
+        setStatus({ type: '', message: '' });
       }, 5000);
     }
     return () => {
@@ -208,68 +172,33 @@ const Contact = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setStatus({ type: 'loading', message: 'Sending message...' });
+    setIsSubmitting(true);
+    setStatus({ type: '', message: '' });
 
     try {
-      const response = await fetch('http://localhost:5000/api/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+      await api.sendMessage(formData);
+      setStatus({
+        type: 'success',
+        message: 'Message sent successfully! I will get back to you soon.'
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setStatus({
-          type: 'success',
-          message: 'Message sent successfully! I will get back to you soon.'
-        });
-        setFormData({
-          name: '',
-          email: '',
-          subject: '',
-          message: ''
-        });
-      } else {
-        throw new Error(data.message || 'Something went wrong');
-      }
+      setFormData({
+        name: '',
+        email: '',
+        subject: '',
+        message: ''
+      });
     } catch (error) {
       setStatus({
         type: 'error',
-        message: error.message
+        message: 'Failed to send message. Please try again later.'
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <ContactSection id="contact">
-      <AnimatePresence>
-        {isVisible && status.message && (
-          <StatusMessageWrapper
-            initial={{ opacity: 0, y: -50, x: 50 }}
-            animate={{ opacity: 1, y: 0, x: 0 }}
-            exit={{ opacity: 0, y: -50, x: 50 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          >
-            <StatusMessage type={status.type}>
-              <StatusIcon>
-                {status.type === 'success' && <FaCheckCircle />}
-                {status.type === 'error' && <FaExclamationCircle />}
-              </StatusIcon>
-              {status.message}
-              <ProgressBar
-                type={status.type}
-                initial={{ width: "100%" }}
-                animate={{ width: "0%" }}
-                transition={{ duration: 5, ease: "linear" }}
-              />
-            </StatusMessage>
-          </StatusMessageWrapper>
-        )}
-      </AnimatePresence>
-
       <Container>
         <SectionTitle
           initial={{ opacity: 0, y: 20 }}
@@ -286,17 +215,20 @@ const Contact = () => {
             I'm currently open to new opportunities and collaborations. Whether you have a question or just want to say hi, I'll try my best to get back to you!
           </ContactText>
           <ContactText>
-            <FaEnvelope /> Email: your.email@example.com
+            <FaEnvelope /> Email: subhampramanik326@gmail.com
           </ContactText>
           <SocialLinks>
-            <SocialLink href="https://github.com/yourusername" target="_blank" rel="noopener noreferrer">
+            <SocialLink href="https://github.com/Subham110" target="_blank" rel="noopener noreferrer">
               <FaGithub />
             </SocialLink>
-            <SocialLink href="https://linkedin.com/in/yourusername" target="_blank" rel="noopener noreferrer">
+            <SocialLink href="https://www.linkedin.com/in/subham-pramanik-9b7601323" target="_blank" rel="noopener noreferrer">
               <FaLinkedin />
             </SocialLink>
-            <SocialLink href="https://twitter.com/yourusername" target="_blank" rel="noopener noreferrer">
+            <SocialLink href="https://x.com/Subham6631" target="_blank" rel="noopener noreferrer">
               <FaTwitter />
+            </SocialLink>
+            <SocialLink href="https://www.instagram.com/lucifer__0.5" target="_blank" rel="noopener noreferrer">
+              <FaInstagram />
             </SocialLink>
           </SocialLinks>
         </ContactInfo>
@@ -311,6 +243,7 @@ const Contact = () => {
               value={formData.name}
               onChange={handleChange}
               required
+              disabled={isSubmitting}
             />
           </FormGroup>
           <FormGroup>
@@ -322,6 +255,7 @@ const Contact = () => {
               value={formData.email}
               onChange={handleChange}
               required
+              disabled={isSubmitting}
             />
           </FormGroup>
           <FormGroup>
@@ -333,6 +267,7 @@ const Contact = () => {
               value={formData.subject}
               onChange={handleChange}
               required
+              disabled={isSubmitting}
             />
           </FormGroup>
           <FormGroup>
@@ -343,12 +278,27 @@ const Contact = () => {
               value={formData.message}
               onChange={handleChange}
               required
+              disabled={isSubmitting}
             />
           </FormGroup>
-          <SubmitButton type="submit" disabled={status.type === 'loading'}>
-            {status.type === 'loading' ? 'Sending...' : 'Send Message'}
+          <SubmitButton type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Sending...' : 'Send Message'}
           </SubmitButton>
         </ContactForm>
+
+        <AnimatePresence>
+          {status.message && (
+            <MessageContainer
+              type={status.type}
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {status.message}
+            </MessageContainer>
+          )}
+        </AnimatePresence>
       </Container>
     </ContactSection>
   );

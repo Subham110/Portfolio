@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
-import { FaGithub, FaLinkedin, FaTwitter } from 'react-icons/fa';
+import { FaGithub, FaLinkedin, FaTwitter,FaInstagram } from 'react-icons/fa';
 
 const HeroSection = styled.section`
   min-height: 100vh;
@@ -108,14 +108,17 @@ const Hero = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
         >
-          <SocialLink href="https://github.com/yourusername" target="_blank" rel="noopener noreferrer">
+          <SocialLink href="https://github.com/Subham110" target="_blank" rel="noopener noreferrer">
             <FaGithub />
           </SocialLink>
-          <SocialLink href="https://linkedin.com/in/yourusername" target="_blank" rel="noopener noreferrer">
+          <SocialLink href="https://www.linkedin.com/in/subham-pramanik-9b7601323" target="_blank" rel="noopener noreferrer">
             <FaLinkedin />
           </SocialLink>
-          <SocialLink href="https://twitter.com/yourusername" target="_blank" rel="noopener noreferrer">
+          <SocialLink href="https://x.com/Subham6631" target="_blank" rel="noopener noreferrer">
             <FaTwitter />
+          </SocialLink>
+          <SocialLink href="https://www.instagram.com/lucifer__0.5" target="_blank" rel="noopener noreferrer">
+            <FaInstagram />
           </SocialLink>
         </SocialLinks>
       </Content>
