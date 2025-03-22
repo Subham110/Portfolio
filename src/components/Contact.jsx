@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { motion } from 'framer-motion';
-import { FaGithub, FaLinkedin, FaTwitter, FaEnvelope } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaGithub, FaLinkedin, FaTwitter, FaEnvelope, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
 
 const ContactSection = styled.section`
   padding: 100px 20px;
@@ -123,6 +123,53 @@ const SubmitButton = styled.button`
   }
 `;
 
+const StatusMessageWrapper = styled(motion.div)`
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+`;
+
+const StatusMessage = styled(motion.div)`
+  padding: 15px 25px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  min-width: 300px;
+  
+  ${props => props.type === 'error' && `
+    background: rgba(255, 0, 0, 0.95);
+    color: white;
+  `}
+  
+  ${props => props.type === 'success' && `
+    background: rgba(100, 255, 218, 0.95);
+    color: #0a192f;
+  `}
+  
+  ${props => props.type === 'loading' && `
+    background: rgba(204, 214, 246, 0.95);
+    color: #0a192f;
+  `}
+`;
+
+const ProgressBar = styled(motion.div)`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: ${props => props.type === 'success' ? '#0a192f' : 'white'};
+  opacity: 0.5;
+`;
+
+const StatusIcon = styled.div`
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+`;
+
 const Contact = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -130,6 +177,26 @@ const Contact = () => {
     subject: '',
     message: ''
   });
+  const [status, setStatus] = useState({
+    type: '',
+    message: ''
+  });
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    let timeoutId;
+    if (status.message) {
+      setIsVisible(true);
+      timeoutId = setTimeout(() => {
+        setIsVisible(false);
+      }, 5000);
+    }
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [status.message]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -139,14 +206,70 @@ const Contact = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log(formData);
+    setStatus({ type: 'loading', message: 'Sending message...' });
+
+    try {
+      const response = await fetch('http://localhost:5000/api/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setStatus({
+          type: 'success',
+          message: 'Message sent successfully! I will get back to you soon.'
+        });
+        setFormData({
+          name: '',
+          email: '',
+          subject: '',
+          message: ''
+        });
+      } else {
+        throw new Error(data.message || 'Something went wrong');
+      }
+    } catch (error) {
+      setStatus({
+        type: 'error',
+        message: error.message
+      });
+    }
   };
 
   return (
     <ContactSection id="contact">
+      <AnimatePresence>
+        {isVisible && status.message && (
+          <StatusMessageWrapper
+            initial={{ opacity: 0, y: -50, x: 50 }}
+            animate={{ opacity: 1, y: 0, x: 0 }}
+            exit={{ opacity: 0, y: -50, x: 50 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          >
+            <StatusMessage type={status.type}>
+              <StatusIcon>
+                {status.type === 'success' && <FaCheckCircle />}
+                {status.type === 'error' && <FaExclamationCircle />}
+              </StatusIcon>
+              {status.message}
+              <ProgressBar
+                type={status.type}
+                initial={{ width: "100%" }}
+                animate={{ width: "0%" }}
+                transition={{ duration: 5, ease: "linear" }}
+              />
+            </StatusMessage>
+          </StatusMessageWrapper>
+        )}
+      </AnimatePresence>
+
       <Container>
         <SectionTitle
           initial={{ opacity: 0, y: 20 }}
@@ -222,7 +345,9 @@ const Contact = () => {
               required
             />
           </FormGroup>
-          <SubmitButton type="submit">Send Message</SubmitButton>
+          <SubmitButton type="submit" disabled={status.type === 'loading'}>
+            {status.type === 'loading' ? 'Sending...' : 'Send Message'}
+          </SubmitButton>
         </ContactForm>
       </Container>
     </ContactSection>
